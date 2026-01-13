@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀Mega Ai</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/tokyo-night-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <i class="fas fa-brain"></i>
+                    <span>Mega Ai</span>
+                </div>
+                <button class="new-chat-btn" onclick="eduBot.startNewChat()">
+                    <i class="fas fa-plus"></i>
+                    <span>New Session</span>
+                </button>
+            </div>
+
+            <div class="conversation-list" id="conversationList">
+                <!-- Loaded via JS -->
+            </div>
+
+            <div class="sidebar-footer" id="sidebarFooter">
+                <!-- Intelligence Mode -->
+                <div class="model-selector">
+                    <div class="selector-group">
+                        <button class="model-btn active" data-model="auto" onclick="eduBot.setModel('auto')"
+                            title="Smart Dynamic Routing">
+                            <i class="fas fa-magic"></i> <span>Auto</span>
+                        </button>
+                        <button class="model-btn" data-model="gemini-flash" onclick="eduBot.setModel('gemini-flash')"
+                            title="Ultra-Fast Flash Mode">
+                            <i class="fas fa-bolt"></i> <span>Flash</span>
+                        </button>
+                        <button class="model-btn" data-model="gemini-pro" onclick="eduBot.setModel('gemini-pro')"
+                            title="Deep Reasoning Pro Mode">
+                            <i class="fas fa-brain"></i> <span>Pro</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="user-profile" id="userProfile" style="display: none;">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="userNameDisplay">User Name</span>
+                    </div>
+                    <button class="icon-btn" onclick="eduBot.logout()" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+                <button class="new-chat-btn login-trigger" id="loginBtn" onclick="eduBot.showAuthModal()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Log In / Sign Up</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay (Mobile Only) -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="eduBot.toggleSidebar()"></div>
+
+        <!-- Main Workspace -->
+        <main class="main-wrapper">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button id="mobileMenuBtn" class="icon-btn mobile-menu-btn" onclick="eduBot.toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="session-info">
+                        <span id="sessionTitle" style="font-weight: 600; font-size: 1.1rem;">New Mega Ai Session</span>
+                        <span id="activeModelBadge" class="model-badge">Auto</span>
+                    </div>
+                </div>
+                <div class="top-actions">
+                    <button class="icon-btn mobile-only" onclick="eduBot.startNewChat()" title="New Session">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="icon-btn" onclick="eduBot.exportChat()" title="Export History">
+                        <i class="fas fa-file-export"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="msg-container" id="msgContainer">
+                <!-- Welcome View -->
+                <div class="welcome-view">
+                    <div class="welcome-center">
+                        <h2>Your Mega Ai Learning Assistant.</h2>
+                        <p>Advanced tutoring for code, documents, and deep analysis.</p>
+                    </div>
+
+                    <div class="welcome-cards">
+                        <div class="welcome-card" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-file-upload"></i>
+                            <h3>Upload file</h3>
+                        </div>
+                        <div class="welcome-card" onclick="eduBot.sendMessage('Create an image showing...')">
+                            <i class="fas fa-palette"></i>
+                            <h3>Create image</h3>
+                        </div>
+                        <div class="welcome-card" onclick="eduBot.sendMessage('Search the web for...')">
+                            <i class="fas fa-globe"></i>
+                            <h3>Web search</h3>
+                        </div>
+                        <div class="welcome-card" onclick="eduBot.startVoiceChat()">
+                            <i class="fas fa-microphone"></i>
+                            <h3>Start voice chat</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="input-section">
+                <div id="uploadPreview" class="upload-preview" style="display: none;">
+                    <div>
+                        <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+                        <span id="fileName">document.pdf</span>
+                    </div>
+                    <i class="fas fa-times" style="cursor: pointer;" onclick="eduBot.removeFile()"></i>
+                </div>
+
+                <div class="input-container glass">
+                    <textarea id="userInput" placeholder="Ask your tutor anything..." rows="1"
+                        oninput="eduBot.autoGrow(this)"></textarea>
+                    <div class="action-btns">
+                        <button class="icon-btn" onclick="document.getElementById('fileInput').click()"
+                            title="Add Context">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="icon-btn send-btn" onclick="eduBot.sendMessage()">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" hidden>
+            </section>
+        </main>
+    </div>
+
+    <!-- Dedicated Login Page handles authentication now -->
+
+    <!-- Scripts -->
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
