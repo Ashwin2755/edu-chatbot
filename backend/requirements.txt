@@ -3,7 +3,7 @@ fastapi>=0.109.0
 uvicorn>=0.27.0
 pydantic>=2.5.0
 
-# AI & LLM
+# AI & LLM (Lightweight)
 openai>=1.12.0
 google-generativeai>=0.3.0
 google-genai>=0.5.0
@@ -33,12 +33,5 @@ requests>=2.31.0
 markdown>=3.5
 bleach>=6.1.0
 
-# RAG (Optional - comment out if not needed)
-langchain>=0.1.0
-langchain-community>=0.0.10
-sentence-transformers>=2.2.0
-chromadb>=0.4.22
-
-# Data Processing
-numpy>=1.26.0
-pandas>=2.1.0
+# Note: RAG dependencies (chromadb, sentence-transformers, torch) are excluded
+# for lightweight deployment. The app runs in standard mode without document Q&A.
