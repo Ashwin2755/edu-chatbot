@@ -25,19 +25,18 @@ class DocumentProcessor:
             chunk_size=500,  # Optimized for educational content
             chunk_overlap=100  # Better context preservation
         )
-        # Using OpenAI-compatible embeddings (could use local too, but let's stick to OpenAI for now if API key exists)
-        # Fallback to local if no API key
-        api_key = os.getenv("OPENROUTER_API_KEY")
-        if api_key:
-             # We use OpenAIEmbeddings but point it to a model that works well or use standard OpenAI ones
-             self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-        else:
-            # Fallback to a local embedding model if no API key (requires sentence-transformers)
+        # Use free HuggingFace embeddings (works without API key)
+        try:
             from langchain_community.embeddings import HuggingFaceEmbeddings
             self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+            logger.info("✅ Using HuggingFace embeddings")
+        except Exception as e:
+            logger.error(f"Failed to load embeddings: {e}")
+            self.embeddings = None
             
         self.vector_db = None
-        self._init_vector_db()
+        if self.embeddings:
+            self._init_vector_db()
 
     def _init_vector_db(self):
         try:

@@ -94,6 +94,11 @@ UPLOADS_DIR.mkdir(exist_ok=True)
 async def login_page():
     return FileResponse("static/login.html")
 
+# Health check endpoint for deployment platforms
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "version": "6.0.0"}
+
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")
