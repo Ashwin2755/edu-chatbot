@@ -568,17 +568,36 @@ RELEVANT DOCUMENT CONTEXT:
             yield f"data: {json.dumps({'type': 'conversation_id', 'id': conversation_id})}\n\n"
             
             full_response = ""
-            # Use model_router to handle steaming if possible, or just check provider here
-            if model_config["provider"] == "gemini":
+            # Always try Gemini first for streaming (most reliable)
+            try:
                 async for chunk in gemini_client.generate_streaming_response(messages, temperature=request.temperature, has_image=bool(request.image_data)):
-                    full_response += chunk
-                    yield f"data: {json.dumps({'type': 'content', 'text': chunk})}\n\n"
-            else:
-                # OpenRouter doesn't support streaming in the current client implementation
-                # Providing a non-streaming fallback for now
-                response = await openrouter_client.generate_response(messages, temperature=request.temperature, model_name=model_config["name"])
-                full_response = response
-                yield f"data: {json.dumps({'type': 'content', 'text': response})}\n\n"
+                    if chunk and not chunk.startswith("⚠️"):
+                        full_response += chunk
+                        yield f"data: {json.dumps({'type': 'content', 'text': chunk})}\n\n"
+                    elif chunk.startswith("⚠️"):
+                        # Gemini failed, try OpenRouter fallback
+                        logger.warning("Gemini streaming failed, trying OpenRouter fallback")
+                        response = await openrouter_client.generate_response(messages, temperature=request.temperature)
+                        if response and "trouble connecting" not in response:
+                            full_response = response
+                            yield f"data: {json.dumps({'type': 'content', 'text': response})}\n\n"
+                        else:
+                            yield f"data: {json.dumps({'type': 'error', 'message': 'AI services temporarily unavailable. Please check API configuration.'})}\n\n"
+                            return
+            except Exception as stream_error:
+                logger.error(f"Streaming error: {stream_error}")
+                # Fallback to non-streaming
+                try:
+                    response = await openrouter_client.generate_response(messages, temperature=request.temperature)
+                    if response and "trouble connecting" not in response:
+                        full_response = response
+                        yield f"data: {json.dumps({'type': 'content', 'text': response})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'type': 'error', 'message': 'AI services temporarily unavailable. Please try again.'})}\n\n"
+                        return
+                except:
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'Failed to connect to AI services.'})}\n\n"
+                    return
             
             # 5. Save history back to JSON
             history.append({

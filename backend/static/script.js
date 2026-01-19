@@ -349,11 +349,26 @@ class EduBot {
                                     this.loadConversations(); // Trigger a background refresh to show it in sidebar
                                 }
                             } else if (data.type === 'content') {
-                                fullResponse += data.text;
-                                // Update display in real-time
-                                contentWrap.innerHTML = marked.parse(fullResponse);
-                                msgDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
-                                this.scrollToBottom();
+                                // Check if the content is an error message from the backend
+                                const errorPhrases = [
+                                    "I'm having trouble connecting",
+                                    "All Gemini models failed",
+                                    "API not configured",
+                                    "services temporarily unavailable"
+                                ];
+                                const isErrorContent = errorPhrases.some(phrase => 
+                                    data.text && data.text.includes(phrase)
+                                );
+                                
+                                if (isErrorContent) {
+                                    contentWrap.innerHTML = `<p class="error-text">⚠️ ${data.text}</p>`;
+                                } else {
+                                    fullResponse += data.text;
+                                    // Update display in real-time
+                                    contentWrap.innerHTML = marked.parse(fullResponse);
+                                    msgDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+                                    this.scrollToBottom();
+                                }
                             } else if (data.type === 'error') {
                                 contentWrap.innerHTML = `<p class="error-text">⚠️ ${data.message}</p>`;
                             }

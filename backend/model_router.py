@@ -161,50 +161,12 @@ class ModelRouter:
                 "reasoning": "Multimodal input (image/document)"
             }
         
-        # Priority 2: Ultra-short queries (use fastest free LLaMA)
-        if len(message.strip()) < 30:
-            return {
-                "model_type": "llama-3.2-3b",
-                "config": self.MODEL_CONFIGS["llama-3.2-3b"],
-                "reasoning": "Ultra-short query → LLaMA 3.2 3B (fastest)"
-            }
+        # Priority 2: All text queries -> Gemini Flash (most reliable)
+        # Previously routed short queries to OpenRouter models which often fail
+        # Gemini Flash is fast enough and more reliable
         
-        # Priority 3: Short queries (30-50 chars)
-        if len(message.strip()) < 50:
-            return {
-                "model_type": ModelType.MISTRAL_7B,
-                "config": self.MODEL_CONFIGS[ModelType.MISTRAL_7B],
-                "reasoning": "Short query → Mistral-7B"
-            }
-        
-        # Priority 4: Long-context queries (use LLaMA 3.1 with extended context)
-        if len(message.strip()) > 500:
-            return {
-                "model_type": "llama-3.1-8b",
-                "config": self.MODEL_CONFIGS["llama-3.1-8b"],
-                "reasoning": "Long query → LLaMA 3.1 8B (extended context)"
-            }
-        
-        # Priority 5: Reasoning-heavy queries
-        message_lower = message.lower()
-        is_complex_reasoning = any(keyword in message_lower for keyword in self.REASONING_KEYWORDS)
-        
-        if is_complex_reasoning:
-            # Use LLaMA 3.1 for better reasoning (free alternative to DeepSeek)
-            return {
-                "model_type": "llama-3.1-8b",
-                "config": self.MODEL_CONFIGS["llama-3.1-8b"],
-                "reasoning": "Complex reasoning → LLaMA 3.1 8B"
-            }
-        
-        # Priority 6: Mode-based selection
-        if mode == ChatMode.EXPLAIN:
-            # Use LLaMA 3-8B for detailed explanations
-            return {
-                "model_type": "llama-3-8b",
-                "config": self.MODEL_CONFIGS["llama-3-8b"],
-                "reasoning": "Explain mode → LLaMA 3 8B"
-            }
+        # Priority 3: Long-context queries - still use Gemini Flash (supports long context)
+        # Priority 4: Reasoning and mode-based - Gemini Flash handles all well
         
         # Default: Gemini Flash (balanced & fast)
         return {
